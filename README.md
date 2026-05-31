@@ -243,52 +243,63 @@ macOS support is planned for Phase 7+. Windows after that.
 KnowDB ships as a single GUI app that manages its background daemon as a
 **systemd user service** (it keeps syncing after you close the window).
 
-Download a package for your distro from the
-[**latest release**](https://github.com/pmsudhi/PKC/releases/latest):
-
 ```bash
-# Debian / Ubuntu / Mint / Pop!_OS — .deb
-sudo apt install ./KnowDB_*_amd64.deb
+# Debian / Ubuntu / Mint / Pop!_OS — apt repo (auto-updates via apt upgrade)
+curl -fsSL https://pmsudhi.github.io/knowdb/apt/knowdb.gpg \
+  | sudo tee /usr/share/keyrings/knowdb.gpg >/dev/null
+echo "deb [signed-by=/usr/share/keyrings/knowdb.gpg] https://pmsudhi.github.io/knowdb/apt ./" \
+  | sudo tee /etc/apt/sources.list.d/knowdb.list
+sudo apt update && sudo apt install know-db
 
-# Fedora / RHEL / openSUSE — .rpm
-sudo dnf install ./KnowDB-*.x86_64.rpm
-
-# Anything else — the portable AppImage (self-updates from this repo)
-chmod +x KnowDB_*_amd64.AppImage && ./KnowDB_*_amd64.AppImage
+# Anything else — download the AppImage or .rpm from Releases:
+#   https://github.com/pmsudhi/knowdb/releases/latest
 ```
 
-On first launch the app installs + starts the service for you, and the AppImage
-keeps itself current by checking this repo's releases. Manage the service any
-time under **Settings → Daemon**.
+On first launch the app installs + starts the service for you. Manage it any
+time under **Settings → Daemon**. Full details — packaging, the systemd unit,
+updates, and the release process — in [`docs/PACKAGING.md`](docs/PACKAGING.md).
 
 ---
 
-## 📥 About this repository
+## 🏗️ Building from Source
 
-**PKC is KnowDB's public distribution channel** — it carries signed release
-binaries (`.deb` / `.rpm` / AppImage), the updater manifest (`latest.json`), and
-per-release notes. **No source code lives here**; development happens in a
-separate repository. Each KnowDB release is published in two places — the source
-repo and this one — and the in-app updater checks **this** repo for new
-versions.
+> Phase 0 hasn't shipped yet. These are the intended commands once the workspace exists.
 
-Release notes for every version live under
-[`docs/release-notes/`](docs/release-notes).
+```bash
+git clone https://github.com/datahq/knowdb
+cd knowdb
+
+# Initialize the local data directories and validate your environment
+cargo run --bin knowdb -- init
+cargo run --bin knowdb -- doctor
+
+# Start the daemon (foreground during development)
+cargo run --bin knowdb -- daemon
+
+# In another terminal: run a search
+cargo run --bin knowdb -- query "what did Priya say about pricing"
+
+# Interactive chat (Phase 4+)
+cargo run --bin knowdb -- chat
+```
 
 ---
 
 ## 🧩 Using KnowDB as an MCP Server
 
-Once the daemon is running, any MCP-aware client can connect to it.
+Once the daemon is running, any MCP-aware client can connect to it. The
+`knowdb mcp-stdio` command speaks the MCP protocol over stdin/stdout and bridges
+to the running daemon (it does **not** open a second copy of your data).
 
-**With Claude Desktop** — add to your `claude_desktop_config.json`:
+**With Claude Desktop / Claude Code** — add to your MCP config
+(`claude_desktop_config.json`, or `claude mcp add`):
 
 ```json
 {
   "mcpServers": {
     "knowdb": {
       "command": "knowdb",
-      "args": ["--mcp-stdio"]
+      "args": ["mcp-stdio"]
     }
   }
 }
@@ -296,18 +307,20 @@ Once the daemon is running, any MCP-aware client can connect to it.
 
 Then ask Claude: *"What commitments do I have outstanding this week?"* — Claude will call KnowDB's tools and answer from your actual email.
 
-**Available MCP tools:**
+**Exposed MCP tools** (read-only — an external assistant queries; it never sends, merges, or deletes):
 
 | Tool | What it does |
 |---|---|
-| `search` | Hybrid semantic + keyword search across all sources |
+| `search` | Semantic + keyword search across all sources |
 | `get_thread` | Full email thread with all messages |
-| `get_entity` | Everything about a person, company, or project |
+| `get_entity` / `list_entities` | A person/company profile, or the ranked network |
+| `entity_timeline` | Interaction history with a contact |
+| `find_related` | Mutual connections / co-participants |
 | `list_commitments` | Commitments owed to/from you with citations |
-| `find_related` | Graph traversal from any event or entity |
-| `summarize` | Thread or query summarization (local or frontier) |
-| `draft_reply` | Compose a reply — *does not send; sending is your job* |
+| `list_accounts` | Connected accounts + sync status |
+| `list_upcoming_birthdays` | Contacts with birthdays coming up |
 | `audit_recent` | Recent outbound AI calls for the privacy panel |
+| `get_storage_stats` | Local substrate size + counts |
 
 ---
 
