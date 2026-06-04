@@ -89,6 +89,21 @@ Description: A Tauri App
  (none)
 
 Package: know-db
+Version: 0.5.14
+Architecture: amd64
+Maintainer: you
+Installed-Size: 182693
+Depends: libwebkit2gtk-4.1-0, libgtk-3-0
+Filename: ./KnowDB_0.5.14_amd64.deb
+Size: 91108230
+MD5sum: 6687e5d87d51dc7c84f365998d3a713e
+SHA1: 0a1e95b2cba13b3dbd58a17dc00c0d85d6d44d43
+SHA256: 3c8053aa79d45b1a41eb277cc66a15a03511ab7afa1b6c2b4c58439a03fe512c
+Priority: optional
+Description: A Tauri App
+ (none)
+
+Package: know-db
 Version: 0.5.2
 Architecture: amd64
 Maintainer: you
